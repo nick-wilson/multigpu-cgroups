@@ -1,3 +1,2 @@
 #!/bin/bash
-source /usr/local/libexec/dgx-cgroup/common || exit $?
-cgroup_remove "$@" || echo ERROR: check log for more details
+flock /var/run/dgx-cgroup/lock -c "/usr/local/libexec/dgx-cgroup/cgroup-remove $*" || echo ERROR: check log for more details

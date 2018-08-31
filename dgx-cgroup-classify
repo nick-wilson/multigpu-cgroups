@@ -1,3 +1,2 @@
 #!/bin/bash
-source /usr/local/libexec/dgx-cgroup/common || exit $?
-cgroup_classify "$@" || echo ERROR: check log for more details
+flock /var/run/dgx-cgroup/lock -c "/usr/local/libexec/dgx-cgroup/cgroup-classify $*" || echo ERROR: check log for more details
