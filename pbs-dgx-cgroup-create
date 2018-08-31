@@ -1,0 +1,45 @@
+#!/bin/bash
+
+user="$1"
+job="$2"
+resources="$3"
+
+if [ 1 -eq 1 ] ; then
+out=/tmp/hook.env.$$
+echo "$@" > $out
+echo ==== >> $out
+ps -ef >> $out
+echo ==== >> $out
+pstree -p >> $out
+echo ==== >> $out
+env >> $out
+echo ==== >> $out
+fi
+
+### Example of process tree
+#           |-pbs_mom(74845)---pbs_mom(68381)-+-pbs_mom(68382)
+#                                             `-pbs_mom(68383)---pbs_python(68384)---sh(68385)---cgroup-attach(68386)
+#
+### Walk back up the process tree to first pbs_mom which will become the job shell:
+#           |-pbs_mom(74845)---pbs_mom(68381)-+-bash(68383)-+-less(68401)
+#                                             |             `-pstree(68400)
+#                                             `-pbs_mom(68382)
+ppid_1=`ps --no-header -o ppid -p $$`       # sh
+comm_1=`ps --no-header -o comm -p $ppid_1`
+if [ x"$comm_1" != x"sh" ] ; then         logging "cgroup error job ${job:-NA} pid determination" ; exit 1 ; fi
+ppid_2=`ps --no-header -o ppid -p $ppid_1`  # pbs_python
+comm_2=`ps --no-header -o comm -p $ppid_2`
+if [ x"$comm_2" != x"pbs_python" ] ; then logging "cgroup error job ${job:-NA} pid determination" ; exit 1 ; fi
+ppid_3=`ps --no-header -o ppid -p $ppid_2`  # pbs_mom
+comm_3=`ps --no-header -o comm -p $ppid_3`
+if [ x"$comm_3" != x"pbs_mom" ] ; then    logging "cgroup error job ${job:-NA} pid determination" ; exit 1 ; fi
+
+getngpu(){
+echo "$resources" | grep 'ngpus=.*ngpus=' > /dev/null && { logging "cgroup error not implemented resources for job ${job:-NA} resources ${resources:-NA}" ; exit 1 ; }
+echo "$resources" | grep 'ngpus=' > /dev/null || { echo 0 ; return; }
+echo "$resources" | sed -e "s,^.*ngpus=,," -e "s/[,: ].*//"
+}
+
+ngpus=`getngpu`
+dgx-cgroup-create $job $ngpus $user
+dgx-cgroup-classify $job $ppid_3

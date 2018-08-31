@@ -1,0 +1,3 @@
+#!/bin/bash
+source /usr/local/libexec/dgx-cgroup/common || exit $?
+cgroup_remove "$@" || echo ERROR: check log for more details

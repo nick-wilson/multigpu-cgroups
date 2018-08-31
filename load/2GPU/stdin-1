@@ -1,0 +1,9 @@
+datadir=/home/projects/41000001/datasets/mxnet480
+python /opt/mxnet/example/image-classification/train_imagenet.py \
+ --gpu 0 \
+ --batch-size 110 --num-epochs 1 \
+ --data-train $datadir/train_480_100k.rec \
+ --data-train-idx $datadir/train_480_100k.idx \
+ --disp-batches 10 --network resnet-v1 \
+ --num-layers 50
+

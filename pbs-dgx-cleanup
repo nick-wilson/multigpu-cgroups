@@ -1,0 +1,11 @@
+#!/bin/bash
+# $1 is cgroup (same as PBS job id for PBS jobs)
+# $2 is user id
+
+# remove running containers started in job
+# containers are tagged with UID.CGROUP
+dgx-docker-cleanup $2.$1
+sleep 1
+
+# remove cgroup
+dgx-cgroup-remove $1

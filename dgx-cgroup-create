@@ -1,0 +1,4 @@
+#!/bin/bash
+source /usr/local/libexec/dgx-cgroup/common || exit $?
+gpulist=`assign_gpus "$1" "$2" || echo ERROR: check log for more details 1>&2`
+cgroup_create "$@" $gpulist || echo ERROR: check log for more details 1>&2

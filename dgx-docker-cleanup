@@ -1,0 +1,22 @@
+#!/bin/bash
+if [ $# -ne 1 ] ; then echo incorrect options: $@ ; echo usage: $0 IDENTIFIER ; exit 1 ; fi
+identifier="$1"
+
+# Quick check if any containers are running
+_x=$(docker ps --no-trunc -aq)
+if [ x"$_x" == x ] ; then exit 0 ; fi
+
+getcontainers(){
+docker ps --no-trunc -a | grep " ${identifier}\." | awk '{printf "%s ",$1}'
+}
+
+# stop all containers
+for c in $(getcontainers) ; do
+ logger -p user.info removing docker container $c
+ docker stop "$c"
+done
+ 
+# remove all containers
+for c in $(getcontainers) ; do
+ docker rm "$c"
+done

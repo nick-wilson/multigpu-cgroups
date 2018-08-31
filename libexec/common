@@ -1,0 +1,79 @@
+if [ x"$libexec" == x ] ; then source /usr/local/etc/dgx-cgroup ; fi
+# cannot rely on HOST environment variable
+hostname=`hostname`
+
+logging (){
+ timestamp=`date +%Y%m%d%H%M%S`
+ logger -p user.info "$1"
+ echo "$hostname $timestamp $1" >> /var/log/dgx-cgroup
+}
+
+if [ ! -d "$rundir" ] ; then mkdir "$rundir" || { logging "cgroup error creating $rundir" ; exit 1 ; } ; fi
+if [ ! -f "$map_gpu" ] ; then
+cat << EOF > "$map_gpu"
+#ID STATUS JOB
+0,A,NA
+1,A,NA
+2,A,NA
+3,A,NA
+4,A,NA
+5,A,NA
+6,A,NA
+7,A,NA
+EOF
+fi
+
+assign_gpus(){
+if [ $# -ne 2 ] ; then { logging "cgroup error assign GPU arguments $@"  ; exit 1 ; } ; fi
+_cgroup="$1"
+_ngpus="$2"
+_i=`expr $_ngpus - 1`
+echo `seq 0 $_i`
+}
+
+release_gpus(){
+for g in "$@" ; do
+ echo sed -i 's/^${g},.*/^${g},A,NA/' $map_gpu
+done
+}
+
+cgroup_create(){
+ if [ $# -lt 3 ] ; then { logging "cgroup create error arguments $@"  ; exit 1 ; } ; fi
+ _cgroup=$1
+ shift
+ if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then logging "cgroup exists $_cgroup" ; fi
+ _ngpus=$1
+ shift
+ _uid=$1
+ shift
+ _gpus="$@"
+ if [ $# -ne $_ngpus ] ; then { logging "cgroup error creating ${_cgroup} arguments ${_cgroup:-NA} ${_uid:-NA} ${_ngpus:-NA} ${_gpus:-NA}" ; exit 1 ; } ; fi
+ logging "cgroup create $_cgroup for ID ${_uid:-NA} with ${_ngpus:-NA} gpus ${_gpus:-NA}"
+ # create cgroup with permission for user to add tasks
+ cgcreate -g "devices:/$_cgroup" -d 755 -t $_uid || { logging "cgroup error cgcreate ${_cgroup}" ; exit 1 ; }
+ # first deny all
+ for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$_cgroup ; done
+ # then allow GPUs for job
+ for i in $_gpus ;do cgset -r devices.allow="c 195:$i rw" /$_cgroup ; done
+}
+
+cgroup_classify(){
+ _cgroup=$1
+ shift
+ logging "cgroup ${_cgroup:-NA} classify processes ${@:-NA}"
+ cgclassify -g "devices:/$_cgroup" $@
+}
+
+cgroup_remove(){
+ if [ $# -ne 1 ] ; then { logging "cgroup remove error arguments $@"  ; return 1 ; } ; fi
+ _cgroup="$1"
+ for _g in allgpu nogpu ; do if [ x"$_cgroup" == x"$_g" ] ; then { logging "cgroup skipping delete $_g"  ; return 0 ; } ; fi  ; done
+ nogpu=nogpu
+ if [ ! -d /sys/fs/cgroup/devices/$nogpu ] ; then
+  cgcreate -g "devices:/$nogpu" --tperm 0666 || { logging "cgroup error cgcreate ${nogpu}" ; return 1 ; }
+  for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$nogpu ; done
+ fi
+ cgclassify -g devices:/$nogpu $(</sys/fs/cgroup/devices/$_cgroup/tasks)
+ logging "cgroup delete $_cgroup" 
+ cgdelete -g devices:/$_cgroup
+}
