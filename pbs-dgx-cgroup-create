@@ -4,6 +4,14 @@ user="$1"
 job="$2"
 resources="$3"
 
+logging (){
+ timestamp=`date +%Y%m%d%H%M%S`
+ logger -p user.info "$1"
+ echo "$hostname $timestamp $1" >> /var/log/dgx-cgroup
+}
+
+if [ x"$user" != x"fsg3" ] ; then logging "cgroup create skip ${job:-NA} for user ${user:-NA}" ; exit 0 ; fi
+
 if [ 1 -eq 1 ] ; then
 out=/tmp/hook.env.$$
 echo "$@" > $out
@@ -15,6 +23,7 @@ echo ==== >> $out
 env >> $out
 echo ==== >> $out
 fi
+
 
 ### Example of process tree
 #           |-pbs_mom(74845)---pbs_mom(68381)-+-pbs_mom(68382)
