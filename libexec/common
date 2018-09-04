@@ -24,6 +24,7 @@ reset_gpu_assignment(){
 }
 
 if [ ! -d "$rundir" ] ; then mkdir "$rundir" || { logging "cgroup error creating $rundir" ; exit 1 ; } ; fi
+if [ ! -f "$map_gpu" ] ; then reset_gpu_assignment ; fi
 
 assign_gpus(){
 if [ $# -ne 3 ] ; then { logging "cgroup error assign GPU arguments $@"  ; exit 1 ; } ; fi
@@ -75,7 +76,7 @@ cgroup_create(){
  shift
  _gpus="$@"
  if [ $# -ne $_ngpus ] ; then { logging "cgroup error creating ${_cgroup} arguments ${_cgroup:-NA} ${_uid:-NA} ${_ngpus:-NA} ${_gpus:-NA}" ; exit 1 ; } ; fi
- logging "cgroup create $_cgroup for ID ${_uid:-NA} with ${_ngpus:-NA} gpus ${_gpus:-NA}"
+ logging "cgroup create $_cgroup for user ${_uid:-NA} with ${_ngpus:-NA} gpus ${_gpus:-NA}"
  # create cgroup with permission for user to add tasks
  cgcreate -g "devices:/$_cgroup" -d 755 -t $_uid || { logging "cgroup error cgcreate ${_cgroup}" ; exit 1 ; }
  # first deny all
