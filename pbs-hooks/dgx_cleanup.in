@@ -1,0 +1,20 @@
+#
+# Create hooks and set their properties.
+#
+#
+# Create and define hook dgx_cleanup
+#
+create hook dgx_cleanup
+set hook dgx_cleanup type = site
+set hook dgx_cleanup enabled = true
+set hook dgx_cleanup event = execjob_epilogue
+set hook dgx_cleanup user = pbsadmin
+set hook dgx_cleanup alarm = 600
+set hook dgx_cleanup order = 1
+set hook dgx_cleanup debug = false
+set hook dgx_cleanup fail_action = none
+import hook dgx_cleanup application/x-python base64 -
+IyEvdXNyL2Jpbi9weXRob24KaW1wb3J0IHBicwppbXBvcnQgc3lzCmltcG9ydCBzb2NrZXQKaW1wb3J0IHN1YnByb2Nlc3MsIG9zCgp0cnk6CiAgZT1wYnMuZXZlbnQoKQogIGo9ZS5qb2IKCiAgcXVldWU9c3RyKGoucXVldWUpCiAgaWYgcXVldWVbOjJdICE9ICJmaiIgYW5kIHF1ZXVlWzozXSAhPSAiZGd4IjoKICAgIHBicy5ldmVudCgpLmFjY2VwdCgpCgogIGNvbW1hbmQ9Ii91c3IvbG9jYWwvYmluL3Bicy1kZ3gtY2xlYW51cCAiK3N0cihqLmlkKSsiICIrc3RyKGouZXVzZXIpKyIgPCAvZGV2L251bGwgPj4gL3RtcC9ob29rLmxvZyAyPiYxIgogIG9zLnN5c3RlbShjb21tYW5kKQoKICBwYnMuZXZlbnQoKS5hY2NlcHQoKQoKZXhjZXB0IFN5c3RlbUV4aXQ6CiAgcGFzcwpleGNlcHQ6CiAgcGJzLmV2ZW50KCkucmVqZWN0KCJFeGNlcHRpb24gdHJhcHBlZCBpbiBjbGVhbnVwIikK
+
+import hook dgx_cleanup application/x-config base64 -
+

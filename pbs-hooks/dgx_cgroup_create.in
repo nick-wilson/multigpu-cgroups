@@ -1,0 +1,20 @@
+#
+# Create hooks and set their properties.
+#
+#
+# Create and define hook dgx_cgroup_create
+#
+create hook dgx_cgroup_create
+set hook dgx_cgroup_create type = site
+set hook dgx_cgroup_create enabled = true
+set hook dgx_cgroup_create event = execjob_launch
+set hook dgx_cgroup_create user = pbsadmin
+set hook dgx_cgroup_create alarm = 600
+set hook dgx_cgroup_create order = 100
+set hook dgx_cgroup_create debug = false
+set hook dgx_cgroup_create fail_action = none
+import hook dgx_cgroup_create application/x-python base64 -
+IyEvdXNyL2Jpbi9weXRob24KaW1wb3J0IHBicwppbXBvcnQgc3lzCmltcG9ydCBzb2NrZXQKaW1wb3J0IHN1YnByb2Nlc3MsIG9zCgp0cnk6CiAgZT1wYnMuZXZlbnQoKQogIGo9ZS5qb2IKCiAgcXVldWU9c3RyKGoucXVldWUpCiAgaWYgcXVldWVbOjJdICE9ICJmaiIgYW5kIHF1ZXVlWzozXSAhPSAiZGd4IjoKICAgIHBicy5ldmVudCgpLmFjY2VwdCgpCgogIGNvbW1hbmQ9Ii91c3IvbG9jYWwvYmluL3Bicy1kZ3gtY2dyb3VwLWNyZWF0ZSAiK3N0cihqLmV1c2VyKSsiICIrc3RyKGouaWQpKyIgIitzdHIoai5zY2hlZHNlbGVjdCkrIiA8IC9kZXYvbnVsbCA+PiAvdG1wL2hvb2subG9nIDI+JjEiCiAgb3Muc3lzdGVtKGNvbW1hbmQpCgogIHBicy5ldmVudCgpLmFjY2VwdCgpCgpleGNlcHQgU3lzdGVtRXhpdDoKICBwYXNzCmV4Y2VwdDoKICBwYnMuZXZlbnQoKS5yZWplY3QoIkV4Y2VwdGlvbiB0cmFwcGVkIGluIGNncm91cCBjcmVhdGUiKQo=
+
+import hook dgx_cgroup_create application/x-config base64 -
+
