@@ -1,7 +1,7 @@
 #!/bin/bash
 if [ x"$PAM_TYPE" != x"open_session" ] ; then exit 0 ; fi
 if [ x"$PAM_USER" == x"root" ] ; then exit 0 ; fi
-if [ x"$PAM_USER" != x"fsg3" ] ; then exit 0 ; fi
+if [ x"$HOSTNAME" == x"dgx4106" ] ; then exit 0 ; fi
 
 logging (){
  timestamp=`date +%Y%m%d%H%M%S`
@@ -12,14 +12,14 @@ logging (){
 }
 
 attach_cgroup(){
- logging "cgroup sshd attach $2 to $1"
+ logging "cgroup sshd attach $2 to $1 for user $PAM_USER"
  exec cgclassify -g devices:/$1 $2
 }
 
 available=`find /sys/fs/cgroup/devices/*.wlm01/tasks -user $PAM_USER 2>/dev/null | awk -F/ '{printf "%s ",$6}' | sed -e 's/ $//'`
 
 if [ x"$available" == x ] ; then
- logging "cgroup sshd attach failed for user $LOGNAME"
+ logging "cgroup sshd attach failed for user $PAM_USER"
  attach_cgroup nogpu $PPID
 fi
 

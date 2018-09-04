@@ -4,18 +4,18 @@ logging (){
  timestamp=`date +%Y%m%d%H%M%S`
  logger -p user.info "$1"
  if [ -w /var/log/dgx-cgroup ] ; then
-  echo "$hostname $timestamp $1" >> /var/log/dgx-cgroup
+  echo "$HOSTNAME $timestamp $1" >> /var/log/dgx-cgroup
  fi
 }
 
 attach_cgroup(){
  echo executing: cgclassify -g devices:/$1 $parent 1>&2
- logging "cgroup attach $parent to $1"
+ logging "cgroup attach $parent to $1 for user $USER"
  exec cgclassify -g devices:/$1 $parent
 }
 
 parent="$PPID"
-available=`find /sys/fs/cgroup/devices/*.wlm01/tasks -user $LOGNAME 2>/dev/null | awk -F/ '{printf "%s ",$6}' | sed -e 's/ $//'`
+available=`find /sys/fs/cgroup/devices/*.wlm01/tasks -user $USER 2>/dev/null | awk -F/ '{printf "%s ",$6}' | sed -e 's/ $//'`
 
 if [ x"$1" == x"-h" -o x"$1" == x"--help" -o x"$1" == x"--usage" ] ; then
  echo 'pbs-attach [-l] [-h] [JOBID]'
@@ -36,7 +36,7 @@ fi
 
 if [ x"$available" == x ] ; then
  echo cannot find any cgroup, attaching to nogpu 1>&2
- logging "cgroup attach failed for user $LOGNAME"
+ logging "cgroup attach failed for user $USER"
  attach_cgroup nogpu
 fi
 

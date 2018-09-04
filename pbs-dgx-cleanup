@@ -5,15 +5,15 @@
 logging (){
  timestamp=`date +%Y%m%d%H%M%S`
  logger -p user.info "$1"
- echo "$hostname $timestamp $1" >> /var/log/dgx-cgroup
+ echo "$HOSTNAME $timestamp $1" >> /var/log/dgx-cgroup
 }
-
-if [ x"$2" != x"fsg3" ] ; then logging "cgroup cleanup skip ${1:-NA} for user ${2:-NA}" ; exit 0 ; fi
 
 # remove running containers started in job
 # containers are tagged with UID-CGROUP-DATE-RANDOM
 dgx-docker-cleanup ${2}-${1}-
 sleep 1
+
+if [ x"$HOSTNAME" == x"dgx4106" ] ; then logging "cgroup cleanup skip ${1:-NA} for user ${2:-NA}" ; exit 0 ; fi
 
 # remove cgroup
 dgx-cgroup-remove $1

@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l select=1:ncpus=4:ngpus=1
+#PBS -l select=1:ncpus=5:ngpus=1
 #PBS -l walltime=1:00:00
 #PBS -q fj5
 #PBS -P 41000001
