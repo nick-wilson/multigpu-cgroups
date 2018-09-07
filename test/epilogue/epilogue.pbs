@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=5:ngpus=1
+#PBS -l walltime=0:10:00
+#PBS -q fj5
+#PBS -P 41000001
+#PBS -N test_cleanup
+#PBS -j oe
+
+nvidia-docker-run alpine:latest << EOF
+sleep 3600
+EOF
