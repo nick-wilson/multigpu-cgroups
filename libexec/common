@@ -85,6 +85,21 @@ cgroup_create(){
  for i in $_gpus ;do cgset -r devices.allow="c 195:$i rw" /$_cgroup ; done
 }
 
+cgroup_create_allgpu(){
+ _cgroup="allgpu"
+ if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then return ; fi
+ cgcreate -g devices:/$_cgroup -d 755 --tperm 0775 -t root:nscc-proj || { logging "cgroup error cgcreate $_cgroup" ; exit 1 ; }
+}
+cgroup_create_allgpu
+
+cgroup_create_nogpu(){
+ _cgroup="nogpu"
+ if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then return ; fi
+ cgcreate -g devices:/$_cgroup -d 755 --tperm 0666 || { logging "cgroup error cgcreate $_cgroup" ; exit 1 ; }
+ for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$_cgroup ; done
+}
+cgroup_create_nogpu
+
 cgroup_classify(){
  _cgroup=$1
  shift
@@ -97,11 +112,8 @@ cgroup_remove(){
  _cgroup="$1"
  for _g in allgpu nogpu ; do if [ x"$_cgroup" == x"$_g" ] ; then { logging "cgroup skipping delete $_g"  ; return 0 ; } ; fi  ; done
  release_gpus "$_cgroup"
+ cgroup_create_nogpu
  nogpu=nogpu
- if [ ! -d /sys/fs/cgroup/devices/$nogpu ] ; then
-  cgcreate -g "devices:/$nogpu" --tperm 0666 || { logging "cgroup error cgcreate ${nogpu}" ; return 1 ; }
-  for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$nogpu ; done
- fi
  cgclassify -g devices:/$nogpu $(</sys/fs/cgroup/devices/$_cgroup/tasks)
  logging "cgroup delete $_cgroup" 
  cgdelete -g devices:/$_cgroup
