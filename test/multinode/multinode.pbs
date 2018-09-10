@@ -35,4 +35,4 @@ echo
 # Will see GPU cards on remote nodes this time
 echo
 echo Pass 2
-all_nvidia-smi
+run_nvidia-smi

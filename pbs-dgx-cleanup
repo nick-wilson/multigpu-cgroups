@@ -13,7 +13,5 @@ logging (){
 dgx-docker-cleanup ${2}-${1}-
 sleep 1
 
-if [ x"$HOSTNAME" == x"dgx4106" ] ; then logging "cgroup cleanup skip ${1:-NA} for user ${2:-NA}" ; exit 0 ; fi
-
 # remove cgroup
 dgx-cgroup-remove $1

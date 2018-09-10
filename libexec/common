@@ -28,35 +28,35 @@ if [ ! -f "$map_gpu" ] ; then reset_gpu_assignment ; fi
 
 assign_gpus(){
 if [ $# -ne 3 ] ; then { logging "cgroup error assign GPU arguments $@"  ; exit 1 ; } ; fi
-_cgroup="$1"
-_ngpus="$2"
-_user="$3"
-_required="$_ngpus"
-_gpus=""
+_assign_gpus_cgroup="$1"
+_assign_gpus_ngpus="$2"
+_assign_gpus_user="$3"
+_assign_gpus_required="$_assign_gpus_ngpus"
+_assign_gpus_gpus=""
 if [ ! -f "$map_gpu" ] ; then reset_gpu_assignment ; fi
 source "$map_gpu"
 for i in {0..7} ; do
- if [ $_required -eq 0 ] ; then break ; fi
+ if [ $_assign_gpus_required -eq 0 ] ; then break ; fi
  if [ "${gpu_status[$i]}" == A ] ; then
   gpu_status[$i]="B"
-  gpu_cgroup[$i]="$_cgroup"
-  gpu_user[$i]="$_user"
-  _gpus="$_gpus $i"
-  _required=`expr $_required - 1`
+  gpu_cgroup[$i]="$_assign_gpus_cgroup"
+  gpu_user[$i]="$_assign_gpus_user"
+  _assign_gpus_gpus="$_assign_gpus_gpus $i"
+  _assign_gpus_required=`expr $_assign_gpus_required - 1`
  fi
 done
-if [ $_required -gt 0 ] ; then { logging "cgroup error assign could not find enough GPUs"  ; exit 1 ; } ; fi
+if [ $_assign_gpus_required -gt 0 ] ; then { logging "cgroup error assign could not find enough GPUs"  ; exit 1 ; } ; fi
 write_gpu_assignment
-echo $_gpus
+echo $_assign_gpus_gpus
 }
 
 release_gpus(){
 if [ $# -ne 1 ] ; then { logging "cgroup error release GPU arguments $@"  ; exit 1 ; } ; fi
-_cgroup="$1"
+_release_gpus_cgroup="$1"
 if [ ! -f "$map_gpu" ] ; then { logging "cgroup error release no map file" ; exit 1 ; } ; fi
 source "$map_gpu"
 for i in {0..7} ; do
- if [ "${gpu_cgroup[$i]}" == "$_cgroup" ] ; then
+ if [ "${gpu_cgroup[$i]}" == "$_release_gpus_cgroup" ] ; then
   gpu_status[$i]="A"
   gpu_cgroup[$i]="NA"
   gpu_user[$i]="NA"
@@ -67,54 +67,65 @@ write_gpu_assignment
 
 cgroup_create(){
  if [ $# -lt 3 ] ; then { logging "cgroup create error arguments $@"  ; exit 1 ; } ; fi
- _cgroup=$1
+ _cgroup_create_cgroup=$1
  shift
- if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then logging "cgroup exists $_cgroup" ; fi
- _ngpus=$1
+ if [ -d /sys/fs/cgroup/devices/$_cgroup_create_cgroup ] ; then logging "cgroup exists $_cgroup_create_cgroup" ; fi
+ _cgroup_create_ngpus=$1
  shift
- _uid=$1
+ _cgroup_create_uid=$1
  shift
- _gpus="$@"
- if [ $# -ne $_ngpus ] ; then { logging "cgroup error creating ${_cgroup} arguments ${_cgroup:-NA} ${_uid:-NA} ${_ngpus:-NA} ${_gpus:-NA}" ; exit 1 ; } ; fi
- logging "cgroup create $_cgroup for user ${_uid:-NA} with ${_ngpus:-NA} gpus ${_gpus:-NA}"
+ _cgroup_create_gpus="$@"
+ if [ $# -ne $_cgroup_create_ngpus ] ; then { logging "cgroup error creating ${_cgroup_create_cgroup} arguments ${_cgroup_create_cgroup:-NA} ${_cgroup_create_uid:-NA} ${_cgroup_create_ngpus:-NA} ${_cgroup_create_gpus:-NA}" ; exit 1 ; } ; fi
+ logging "cgroup create $_cgroup_create_cgroup for user ${_cgroup_create_uid:-NA} with ${_cgroup_create_ngpus:-NA} gpus ${_cgroup_create_gpus:-NA}"
  # create cgroup with permission for user to add tasks
- cgcreate -g "devices:/$_cgroup" -d 755 -t $_uid || { logging "cgroup error cgcreate ${_cgroup}" ; exit 1 ; }
+ cgcreate -g "devices:/$_cgroup_create_cgroup" -d 755 -t $_cgroup_create_uid || { logging "cgroup error cgcreate ${_cgroup_create_cgroup}" ; exit 1 ; }
  # first deny all
- for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$_cgroup ; done
+ for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$_cgroup_create_cgroup ; done
  # then allow GPUs for job
- for i in $_gpus ;do cgset -r devices.allow="c 195:$i rw" /$_cgroup ; done
+ for i in $_cgroup_create_gpus ;do cgset -r devices.allow="c 195:$i rw" /$_cgroup_create_cgroup ; done
 }
 
 cgroup_create_allgpu(){
- _cgroup="allgpu"
- if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then return ; fi
- cgcreate -g devices:/$_cgroup -d 755 --tperm 0775 -t root:nscc-proj || { logging "cgroup error cgcreate $_cgroup" ; exit 1 ; }
+ # allgpu is used elsewhere, do not change
+ if [ -d /sys/fs/cgroup/devices/allgpu ] ; then return ; fi
+ cgcreate -g devices:/allgpu -d 755 --tperm 0775 -t root:nscc-proj || { logging "cgroup error cgcreate allgpu" ; exit 1 ; }
 }
 cgroup_create_allgpu
 
 cgroup_create_nogpu(){
- _cgroup="nogpu"
- if [ -d /sys/fs/cgroup/devices/$_cgroup ] ; then return ; fi
- cgcreate -g devices:/$_cgroup -d 755 --tperm 0666 || { logging "cgroup error cgcreate $_cgroup" ; exit 1 ; }
- for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /$_cgroup ; done
+ # nogpu is used elsewhere, do not change
+ if [ -d /sys/fs/cgroup/devices/nogpu ] ; then return ; fi
+ cgcreate -g devices:/nogpu -d 755 --tperm 0666 || { logging "cgroup error cgcreate nogpu" ; exit 1 ; }
+ for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /nogpu ; done
 }
 cgroup_create_nogpu
 
+cgroup_create_shared(){
+ # shared is referenced elsewhere, do not change
+ if [ $nshared -eq 0 ] ; then return ; fi
+ if [ -d /sys/fs/cgroup/devices/shared ] ; then return ; fi
+ cgcreate -g devices:/shared -d 755 --tperm 0666 || { logging "cgroup error cgcreate shared" ; exit 1 ; }
+ for i in {0..7} ;do cgset -r devices.deny="c 195:$i rw" /shared ; done
+ for i in `assign_gpus shared $nshared ALL` ; do cgset -r devices.allow="c 195:$i rw" /shared ; done
+}
+cgroup_create_shared
+
 cgroup_classify(){
- _cgroup=$1
+ _cgroup_classify_cgroup=$1
  shift
- logging "cgroup ${_cgroup:-NA} classify processes ${@:-NA}"
- cgclassify -g "devices:/$_cgroup" $@
+ logging "cgroup ${_cgroup_classify_cgroup:-NA} classify processes ${@:-NA}"
+ cgclassify -g "devices:/$_cgroup_classify_cgroup" $@
 }
 
 cgroup_remove(){
- if [ $# -ne 1 ] ; then { logging "cgroup remove error arguments $@"  ; return 1 ; } ; fi
- _cgroup="$1"
- for _g in allgpu nogpu ; do if [ x"$_cgroup" == x"$_g" ] ; then { logging "cgroup skipping delete $_g"  ; return 0 ; } ; fi  ; done
- release_gpus "$_cgroup"
+ if [ $# -ne 1 ] ; then logging "cgroup remove error arguments $@"  ; return 1 ; fi
+ _cgroup_remove_cgroup="$1"
+ for _g in allgpu nogpu shared ; do if [ x"$_cgroup_remove_cgroup" == x"$_g" ] ; then logging "cgroup skipping delete $_g"  ; return 0 ; fi  ; done
+ release_gpus "$_cgroup_remove_cgroup"
+ if [ ! -d /sys/fs/cgroup/devices/$_cgroup_remove_cgroup ] ; then logging "cgroup skipping delete $_cgroup_remove_cgroup" ; return 0 ; fi
  cgroup_create_nogpu
  nogpu=nogpu
- cgclassify -g devices:/$nogpu $(</sys/fs/cgroup/devices/$_cgroup/tasks)
- logging "cgroup delete $_cgroup" 
- cgdelete -g devices:/$_cgroup
+ cgclassify -g devices:/$nogpu $(</sys/fs/cgroup/devices/$_cgroup_remove_cgroup/tasks)
+ logging "cgroup delete $_cgroup_remove_cgroup" 
+ cgdelete -g devices:/$_cgroup_remove_cgroup
 }

@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l select=2:ncpus=30:ngpus=5
+#PBS -l walltime=0:10:00
+#PBS -q fj5
+#PBS -P 41000001
+#PBS -N hook_multinode_mpi
+#PBS -j oe
+
+
+cd "$PBS_O_WORKDIR" || exit $?
+
+mpirun nvidia-smi

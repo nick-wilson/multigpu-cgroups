@@ -10,8 +10,6 @@ logging (){
  echo "$HOSTNAME $timestamp $1" >> /var/log/dgx-cgroup
 }
 
-if [ x"$HOSTNAME" == x"dgx4106" ] ; then logging "cgroup create skip ${job:-NA} for user ${user:-NA}" ; exit 0 ; fi
-
 if [ 1 -eq 1 ] ; then
 out=/tmp/hook.env.$$
 echo "$@" > $out
@@ -49,6 +47,13 @@ echo "$resources" | grep 'ngpus=' > /dev/null || { echo 0 ; return; }
 echo "$resources" | sed -e "s,^.*ngpus=,," -e "s/[,: ].*//"
 }
 
-ngpus=`getngpu`
-dgx-cgroup-create $job $ngpus $user
-dgx-cgroup-classify $job $ppid_3
+interactive=0
+echo  "$resources" | grep 'model=dgx1-interactive' > /dev/null && interactive=1
+
+if [ $interactive -eq 1 ] ; then
+ dgx-cgroup-classify shared $ppid_3
+else
+ ngpus=`getngpu`
+ dgx-cgroup-create $job $ngpus $user
+ dgx-cgroup-classify $job $ppid_3
+fi

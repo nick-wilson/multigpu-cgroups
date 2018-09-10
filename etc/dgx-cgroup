@@ -2,3 +2,4 @@ libexec=/usr/local/libexec/dgx-cgroup
 rundir=/var/run/dgx-cgroup
 map_gpu="$rundir/map-gpu"
 lock="$rundir/lock"
+nshared=0

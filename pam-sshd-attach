@@ -1,7 +1,6 @@
 #!/bin/bash
 if [ x"$PAM_TYPE" != x"open_session" ] ; then exit 0 ; fi
 if [ x"$PAM_USER" == x"root" ] ; then exit 0 ; fi
-if [ x"$HOSTNAME" == x"dgx4106" ] ; then exit 0 ; fi
 
 logging (){
  timestamp=`date +%Y%m%d%H%M%S`
@@ -19,8 +18,9 @@ attach_cgroup(){
 available=`find /sys/fs/cgroup/devices/*.wlm01/tasks -user $PAM_USER 2>/dev/null | awk -F/ '{printf "%s ",$6}' | sed -e 's/ $//'`
 
 if [ x"$available" == x ] ; then
- logging "cgroup sshd attach failed for user $PAM_USER"
- attach_cgroup nogpu $PPID
+ pam_cgroup=nogpu
+ if [ -d /sys/fs/cgroup/devices/shared ] ; then pam_cgroup=shared ; fi
+ attach_cgroup $pam_cgroup $PPID
 fi
 
 declare -a cgroups
