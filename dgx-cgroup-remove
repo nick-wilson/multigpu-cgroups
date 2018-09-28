@@ -1,2 +1,3 @@
 #!/bin/bash
-flock /var/run/dgx-cgroup/lock -c "/usr/local/libexec/dgx-cgroup/cgroup-remove $*" || echo ERROR: check log for more details
+if [ ! -d /var/run/dgx-cgroup ] ; then mkdir /var/run/dgx-cgroup ; fi
+flock /var/run/dgx-cgroup/lock -c "/usr/local/libexec/dgx-cgroup/cgroup-remove $*" || echo ERROR: check log for more details 1>&2

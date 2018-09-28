@@ -48,7 +48,7 @@ echo "$resources" | sed -e "s,^.*ngpus=,," -e "s/[,: ].*//"
 }
 
 interactive=0
-echo  "$resources" | grep 'model=dgx1-interactive' > /dev/null && interactive=1
+echo  "$resources" | grep 'model=dgx-dev' > /dev/null && interactive=1
 
 if [ $interactive -eq 1 ] ; then
  dgx-cgroup-classify shared $ppid_3
