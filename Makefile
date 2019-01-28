@@ -1,8 +1,8 @@
-SCRIPTS_ROOT=pbs-dgx-cgroup-create pbs-dgx-cleanup dgx-cgroup-classify dgx-cgroup-create dgx-cgroup-remove dgx-docker-cleanup pam-sshd-attach
+SCRIPTS_ROOT=pbs-dgx-cgroup-create pbs-dgx-cleanup dgx-cgroup-classify dgx-cgroup-create dgx-cgroup-remove dgx-cgroup-cleanup dgx-docker-cleanup pam-sshd-attach
 SCRIPTS_USER=pbs-attach
 SCRIPTS_SBIN=pbs-set-interactive
 ETC=dgx-cgroup
-LIBEXEC=common cgroup-classify cgroup-create cgroup-remove
+LIBEXEC=common cgroup-classify cgroup-create cgroup-remove cgroup-cleanup
 
 PREFIX=/usr/local
 

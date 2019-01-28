@@ -1,0 +1,24 @@
+#!/bin/bash
+
+source /usr/local/libexec/dgx-cgroup/common || exit $?
+
+# find jobs meant to be running
+PATH="$PATH:/opt/pbs/bin" ; export PATH
+jobs=`pbsnodes $hostname | grep 'jobs = ' | sed -e 's%/[0-9]*,*%%g' -e 's/^.*jobs = //'`
+
+# check if they have a cgroup mapped to GPUs
+source "$map_gpu"
+finished=""
+checked=""
+for j in $jobs ; do
+ # only check first instance
+ echo $checked | grep -w $j > /dev/null && continue
+ _x=`echo ${gpu_cgroup[*]} | grep -w $j`
+ if [ x"$_x" == x ] ; then finished="$finished $j" ; fi
+ checked="$checked $j"
+done
+
+# remove any cgroups for jobs which have finished and not cleaned up correctly
+for c in $finished ; do
+ cgroup_remove $c || echo ERROR: check log for more details
+done
