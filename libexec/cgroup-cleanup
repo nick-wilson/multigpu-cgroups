@@ -8,17 +8,36 @@ jobs=`pbsnodes $hostname | grep 'jobs = ' | sed -e 's%/[0-9]*,*%%g' -e 's/^.*job
 
 # check if they have a cgroup mapped to GPUs
 source "$map_gpu"
+
+n=${#gpu_cgroup[*]}
+
+cg=""
+i=0
+while [ $i -lt ${#gpu_cgroup[*]} ] ; do
+ if [ ${gpu_status[$i]} == B ] ; then
+  if [ x"${gpu_cgroup[$i]}" != x"shared" ] ; then
+   cg="$cg ${gpu_cgroup[$i]}"
+  fi
+ fi
+ i=`expr $i + 1`
+done
+
 finished=""
 checked=""
-for j in $jobs ; do
+for c in $cg ; do
  # only check first instance
- echo $checked | grep -w $j > /dev/null && continue
- _x=`echo ${gpu_cgroup[*]} | grep -w $j`
- if [ x"$_x" == x ] ; then finished="$finished $j" ; fi
- checked="$checked $j"
+ echo $checked | grep -w $c > /dev/null && continue
+ # skip shared group 
+ if [ x"$c" == x"shared" ] ; then continue ; fi
+ _x=`echo $jobs | grep -w $c`
+ if [ x"$_x" == x ] ; then finished="$finished $c" ; fi
+ checked="$checked $c"
 done
 
 # remove any cgroups for jobs which have finished and not cleaned up correctly
 for c in $finished ; do
  cgroup_remove $c || echo ERROR: check log for more details
 done
+
+
+

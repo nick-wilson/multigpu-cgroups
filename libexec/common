@@ -65,6 +65,25 @@ done
 write_gpu_assignment
 }
 
+cgroup_precheck(){
+ if [ $# -lt 1 ] ; then { logging "cgroup precheck error arguments $@"  ; exit 1 ; } ; fi
+ _cgroup_precheck_ngpus=$1
+ shift
+ _available_gpus=0
+ source "$map_gpu"
+ for i in {0..7} ; do
+  if [ "${gpu_status[$i]}" == A ] ; then
+   _available_gpus=`expr $_available_gpus + 1`
+  fi
+ done
+ if [ $_available_gpus -ge $_cgroup_precheck_ngpus ] ; then
+  return 0
+ else
+  logging "cgroup error precheck available $_available_gpus requested $_cgroup_precheck_ngpus"
+  return 1
+ fi
+}
+
 cgroup_create(){
  if [ $# -lt 3 ] ; then { logging "cgroup create error arguments $@"  ; exit 1 ; } ; fi
  _cgroup_create_cgroup=$1
