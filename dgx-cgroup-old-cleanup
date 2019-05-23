@@ -1,0 +1,6 @@
+#!/bin/sh
+ls -l /sys/fs/cgroup/devices/*.wlm01/tasks 2>/dev/null | sed -e "s,/tasks,," -e "s,^.*/,," | while read cgroup ; do
+ grep $cgroup /var/run/dgx-cgroup/map-gpu > /dev/null && { echo $cgroup in use, skip ; continue ; }
+ echo removing $cgroup
+ /usr/local/bin/dgx-cgroup-remove $cgroup
+done

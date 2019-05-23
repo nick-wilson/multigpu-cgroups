@@ -1,7 +1,8 @@
-SCRIPTS_ROOT=pbs-dgx-cgroup-create pbs-dgx-cleanup dgx-cgroup-classify dgx-cgroup-create dgx-cgroup-remove dgx-cgroup-cleanup dgx-docker-cleanup pam-sshd-attach
+SCRIPTS_ROOT=pbs-dgx-cgroup-create pbs-dgx-cleanup dgx-cgroup-classify dgx-cgroup-create dgx-cgroup-remove dgx-cgroup-cleanup dgx-docker-cleanup pam-sshd-attach dgx-cgroup-old-cleanup
 SCRIPTS_USER=pbs-attach
 SCRIPTS_SBIN=pbs-set-interactive
 ETC=dgx-cgroup
+CRON=cleanup-cgroup
 LIBEXEC=common cgroup-classify cgroup-create cgroup-remove cgroup-cleanup
 
 PREFIX=/usr/local
@@ -13,5 +14,6 @@ install: $(EXES) $(HELPERS) $(SCRIPTS) $(SCRIPTS_SBIN)
 	install -o root -g root -m 0755 -t $(PREFIX)/sbin $(SCRIPTS_SBIN)
 	install -o root -g root -m 0755 -d $(PREFIX)/etc $(PREFIX)/libexec/dgx-cgroup
 	if [ ! -f $(PREFIX)/etc/$(ETC) ] ; then install -o root -g root -m 0700 -t $(PREFIX)/etc etc/$(ETC) ; fi
+	if [ ! -f /etc/cron.d/$(CRON) ] ; then install -o root -g root -m 0700 -t /etc/cron.d etc/cron.d/$(CRON) ; fi
 	for f in $(LIBEXEC) ; do install -o root -g root -m 0700 -t $(PREFIX)/libexec/dgx-cgroup libexec/$$f ; done
 	./pam-config
